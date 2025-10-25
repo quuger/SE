@@ -1,0 +1,452 @@
+openapi: 3.0.3
+info:
+  title: Bookmark Management Service API
+  description: API для управления закладками с поддержкой экспорта и управления доступом
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@bookmarkservice.com
+
+servers:
+  - url: https://api.bookmarkservice.com/v1
+    description: Production server
+    
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - username
+        - account_type
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        username:
+          type: string
+          example: "bookmark_lover"
+        account_type:
+          type: string
+          enum: [free, premium]
+          example: "free"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Bookmark:
+      type: object
+      required:
+        - id
+        - url
+        - title
+        - access_level
+      properties:
+        id:
+          type: string
+          format: uuid
+        url:
+          type: string
+          format: uri
+          maxLength: 2000
+          example: "https://example.com"
+        title:
+          type: string
+          maxLength: 255
+          example: "Example Website"
+        description:
+          type: string
+          maxLength: 1000
+        status:
+          type: string
+          enum: [active, archived]
+          default: "active"
+        access_level:
+          type: string
+          enum: [private, public]
+          default: "private"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        sync_version:
+          type: integer
+          minimum: 0
+
+    AuthRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 6
+        username:
+          type: string
+          minLength: 3
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+
+    BookmarkListResponse:
+      type: object
+      properties:
+        bookmarks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Bookmark'
+        total_count:
+          type: integer
+        has_more:
+          type: boolean
+
+    ImportRequest:
+      type: object
+      required:
+        - format
+        - data
+      properties:
+        format:
+          type: string
+          enum: [json, html, csv]
+        data:
+          type: string
+          description: "Base64 encoded file content or JSON data"
+
+    ImportResponse:
+      type: object
+      properties:
+        imported_count:
+          type: integer
+        failed_count:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: string
+
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              enum: [LIMIT_EXCEEDED, IMPORT_LIMIT_EXCEEDED, VALIDATION_ERROR, NOT_FOUND, UNAUTHORIZED]
+            message:
+              type: string
+            details:
+              type: object
+              
+  responses:
+    Unauthorized:
+      description: Неавторизованный доступ
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+paths:
+  /auth/register:
+    post:
+      summary: Регистрация нового пользователя
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        '201':
+          description: Пользователь успешно зарегистрирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Неверные данные запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Пользователь с таким email уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      summary: Авторизация пользователя
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        '200':
+          description: Успешная авторизация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Неверные учетные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /bookmarks:
+    get:
+      summary: Получение списка закладок пользователя
+      tags: [Bookmarks]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Список закладок
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookmarkListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      summary: Создание новой закладки
+      tags: [Bookmarks]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+                - title
+              properties:
+                url:
+                  type: string
+                  format: uri
+                title:
+                  type: string
+                description:
+                  type: string
+                access_level:
+                  type: string
+                  enum: [private, public]
+      responses:
+        '201':
+          description: Закладка успешно создана
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bookmark:
+                    $ref: '#/components/schemas/Bookmark'
+        '400':
+          description: Превышен лимит закладок или неверные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /bookmarks/{id}:
+    put:
+      summary: Обновление закладки
+      tags: [Bookmarks]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+                title:
+                  type: string
+                description:
+                  type: string
+                access_level:
+                  type: string
+                  enum: [private, public]
+      responses:
+        '200':
+          description: Закладка успешно обновлена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  bookmark:
+                    $ref: '#/components/schemas/Bookmark'
+        '404':
+          description: Закладка не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Удаление закладки
+      tags: [Bookmarks]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Закладка успешно удалена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '404':
+          description: Закладка не найдена
+
+  /export/{format}:
+    get:
+      summary: Экспорт закладок в указанном формате
+      tags: [Export]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: format
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [json, html, csv]
+      responses:
+        '200':
+          description: Файл экспорта
+          content:
+            application/json:
+              schema:
+                type: string
+            text/html:
+              schema:
+                type: string
+            text/csv:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /import/{format}:
+    post:
+      summary: Импорт закладок
+      tags: [Import]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: format
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [json, html, csv]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportRequest'
+      responses:
+        '200':
+          description: Импорт завершен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportResponse'
+        '400':
+          description: Превышен лимит импорта или неверный формат данных
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+
+tags:
+  - name: Authentication
+    description: Операции аутентификации и регистрации
+  - name: Bookmarks
+    description: Управление закладками
+  - name: Export
+    description: Экспорт закладок
+  - name: Import
+    description: Импорт закладок
