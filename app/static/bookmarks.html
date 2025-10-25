@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bookmarks - Bookmark Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/components.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <div class="logo">
+                    <i class="fas fa-bookmark"></i>
+                    <span>Bookmark Manager</span>
+                </div>
+                <div class="nav-links">
+                    <a href="bookmarks.html" class="nav-link active">Bookmarks</a>
+                    <a href="import-export.html" class="nav-link">Import/Export</a>
+                    <a href="sync.html" class="nav-link">Sync</a>
+                </div>
+                <div class="user-info">
+                    <div class="avatar" id="user-avatar">U</div>
+                    <span id="username">User</span>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">Logout</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">My Bookmarks</h1>
+                <p class="page-description">Manage and organize your bookmarks</p>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Add New Bookmark</h2>
+                </div>
+                <form id="add-bookmark-form">
+                    <div class="form-group">
+                        <label for="bookmark-title" class="form-label">Title</label>
+                        <input type="text" id="bookmark-title" class="form-control" placeholder="Enter bookmark title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="bookmark-url" class="form-label">URL</label>
+                        <input type="url" id="bookmark-url" class="form-control" placeholder="https://example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="bookmark-description" class="form-label">Description (Optional)</label>
+                        <textarea id="bookmark-description" class="form-control" placeholder="Enter description"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="bookmark-access" class="form-label">Access Level</label>
+                        <select id="bookmark-access" class="form-select">
+                            <option value="private">Private</option>
+                            <option value="public">Public</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Bookmark</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">My Bookmarks</h2>
+                    <div class="d-flex align-center">
+                        <select id="bookmark-filter" class="form-select" style="width: auto; margin-right: 10px;">
+                            <option value="all">All</option>
+                            <option value="active">Active</option>
+                            <option value="archived">Archived</option>
+                        </select>
+                        <input type="text" id="bookmark-search" class="form-control" placeholder="Search bookmarks..." style="width: 200px;">
+                    </div>
+                </div>
+                <div class="bookmark-list" id="bookmark-list">
+                    <!-- Bookmarks will be populated here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="logo">
+                    <i class="fas fa-bookmark"></i>
+                    <span>Bookmark Manager</span>
+                </div>
+                <div class="footer-links">
+                    <a href="#" class="footer-link">About</a>
+                    <a href="#" class="footer-link">Privacy Policy</a>
+                    <a href="#" class="footer-link">Terms of Service</a>
+                    <a href="#" class="footer-link">Contact</a>
+                </div>
+                <div class="copyright">
+                    &copy; 2023 Bookmark Management Service. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/utils.js"></script>
+    <script src="js/bookmarks.js"></script>
+    <script>
+        // Check authentication
+        if (localStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'index.html';
+        }
+
+        // Initialize user info
+        document.addEventListener('DOMContentLoaded', function() {
+            const userEmail = localStorage.getItem('userEmail') || 'user@example.com';
+            const avatar = document.getElementById('user-avatar');
+            const username = document.getElementById('username');
+            
+            avatar.textContent = userEmail.charAt(0).toUpperCase();
+            username.textContent = userEmail.split('@')[0];
+
+            // Initialize bookmarks
+            Bookmarks.init();
+
+            // Logout functionality
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('userEmail');
+                window.location.href = 'index.html';
+            });
+        });
+    </script>
+</body>
+</html>
