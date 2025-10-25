@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Bookmark Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/components.css">
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="logo">
+                    <i class="fas fa-bookmark"></i>
+                    <span>Bookmark Manager</span>
+                </div>
+                <h1 class="auth-title">Create Account</h1>
+                <p class="auth-subtitle">Sign up for a new account</p>
+            </div>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="register-username" class="form-label">Username</label>
+                    <input type="text" id="register-username" class="form-control" placeholder="Your username" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email" class="form-label">Email</label>
+                    <input type="email" id="register-email" class="form-control" placeholder="your@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password" class="form-label">Password</label>
+                    <input type="password" id="register-password" class="form-control" placeholder="Your password" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-confirm-password" class="form-label">Confirm Password</label>
+                    <input type="password" id="register-confirm-password" class="form-control" placeholder="Confirm your password" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Sign Up</button>
+            </form>
+            <div class="auth-switch">
+                <p>Already have an account? <a href="index.html" class="auth-link">Sign in</a></p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="auth-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="#" class="footer-link">About</a>
+                    <a href="#" class="footer-link">Privacy Policy</a>
+                    <a href="#" class="footer-link">Terms of Service</a>
+                    <a href="#" class="footer-link">Contact</a>
+                </div>
+                <div class="copyright">
+                    &copy; 2023 Bookmark Management Service. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/utils.js"></script>
+    <script>
+        document.getElementById('register-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('register-username').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-confirm-password').value;
+            
+            if (password !== confirmPassword) {
+                alert('Passwords do not match');
+                return;
+            }
+            
+            if (username && email && password) {
+                // Store registration data and redirect to login
+                localStorage.setItem('userEmail', email);
+                alert('Registration successful! Please login.');
+                window.location.href = 'index.html';
+            } else {
+                alert('Please fill in all fields');
+            }
+        });
+
+        // Check if already logged in
+        if (localStorage.getItem('isLoggedIn') === 'true') {
+            window.location.href = 'bookmarks.html';
+        }
+    </script>
+</body>
+</html>

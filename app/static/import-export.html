@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import/Export - Bookmark Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/components.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <div class="logo">
+                    <i class="fas fa-bookmark"></i>
+                    <span>Bookmark Manager</span>
+                </div>
+                <div class="nav-links">
+                    <a href="bookmarks.html" class="nav-link">Bookmarks</a>
+                    <a href="import-export.html" class="nav-link active">Import/Export</a>
+                    <a href="sync.html" class="nav-link">Sync</a>
+                </div>
+                <div class="user-info">
+                    <div class="avatar" id="user-avatar">U</div>
+                    <span id="username">User</span>
+                    <button class="btn btn-outline btn-sm" id="logout-btn">Logout</button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">Import & Export</h1>
+                <p class="page-description">Transfer your bookmarks between systems</p>
+            </div>
+            
+            <div class="import-export-container">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Export Bookmarks</h2>
+                    </div>
+                    <p>Export your bookmarks in various formats for backup or use in other applications.</p>
+                    
+                    <div class="format-options">
+                        <div class="format-option active" data-format="json">
+                            <i class="fas fa-file-code"></i>
+                            <div>JSON</div>
+                        </div>
+                        <div class="format-option" data-format="html">
+                            <i class="fas fa-file-alt"></i>
+                            <div>HTML</div>
+                        </div>
+                        <div class="format-option" data-format="csv">
+                            <i class="fas fa-file-csv"></i>
+                            <div>CSV</div>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-primary" id="export-btn">Export Bookmarks</button>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Import Bookmarks</h2>
+                    </div>
+                    <p>Import bookmarks from other browsers or bookmark managers.</p>
+                    
+                    <div class="format-options">
+                        <div class="format-option active" data-format="json">
+                            <i class="fas fa-file-code"></i>
+                            <div>JSON</div>
+                        </div>
+                        <div class="format-option" data-format="html">
+                            <i class="fas fa-file-alt"></i>
+                            <div>HTML</div>
+                        </div>
+                        <div class="format-option" data-format="csv">
+                            <i class="fas fa-file-csv"></i>
+                            <div>CSV</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="import-file" class="form-label">Select File</label>
+                        <input type="file" id="import-file" class="form-control">
+                    </div>
+                    
+                    <button class="btn btn-secondary" id="import-btn">Import Bookmarks</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="logo">
+                    <i class="fas fa-bookmark"></i>
+                    <span>Bookmark Manager</span>
+                </div>
+                <div class="footer-links">
+                    <a href="#" class="footer-link">About</a>
+                    <a href="#" class="footer-link">Privacy Policy</a>
+                    <a href="#" class="footer-link">Terms of Service</a>
+                    <a href="#" class="footer-link">Contact</a>
+                </div>
+                <div class="copyright">
+                    &copy; 2023 Bookmark Management Service. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/utils.js"></script>
+    <script src="js/import-export.js"></script>
+    <script>
+        // Check authentication
+        if (localStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'index.html';
+        }
+
+        // Initialize user info
+        document.addEventListener('DOMContentLoaded', function() {
+            const userEmail = localStorage.getItem('userEmail') || 'user@example.com';
+            const avatar = document.getElementById('user-avatar');
+            const username = document.getElementById('username');
+            
+            avatar.textContent = userEmail.charAt(0).toUpperCase();
+            username.textContent = userEmail.split('@')[0];
+
+            // Initialize import/export
+            ImportExport.init();
+
+            // Logout functionality
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('userEmail');
+                window.location.href = 'index.html';
+            });
+        });
+    </script>
+</body>
+</html>
