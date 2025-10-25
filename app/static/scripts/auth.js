@@ -9,43 +9,52 @@ const Auth = {
 
     bindEvents: function() {
         // Login form
-        document.getElementById('login-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleLogin();
-        });
+        const loginForm = document.getElementById('login-form');
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleLogin();
+            });
+        }
 
         // Register form
-        document.getElementById('register-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleRegister();
-        });
-
-        // Auth page switches
-        document.getElementById('show-register').addEventListener('click', (e) => {
-            e.preventDefault();
-            this.showRegisterPage();
-        });
-
-        document.getElementById('show-login').addEventListener('click', (e) => {
-            e.preventDefault();
-            this.showLoginPage();
-        });
+        const registerForm = document.getElementById('register-form');
+        if (registerForm) {
+            registerForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleRegister();
+            });
+        }
 
         // Logout
-        document.getElementById('logout-btn').addEventListener('click', () => {
-            this.handleLogout();
-        });
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                this.handleLogout();
+            });
+        }
     },
 
     checkAuthStatus: function() {
-        const token = localStorage.getItem('authToken');
-        const userData = localStorage.getItem('userData');
-
-        if (token && userData) {
-            this.currentUser = JSON.parse(userData);
-            App.showAppPages();
+        if (Utils.isAuthenticated()) {
+            try {
+                this.currentUser = JSON.parse(localStorage.getItem('userData'));
+                // If on auth pages, redirect to bookmarks
+                if (window.location.pathname === '/' || window.location.pathname.includes('index.html') || 
+                    window.location.pathname.includes('register.html')) {
+                    window.location.href = '/bookmarks.html';
+                }
+            } catch (e) {
+                console.error('Error checking auth status:', e);
+                this.handleLogout();
+            }
         } else {
-            App.showAuthPages();
+            // If on protected pages, redirect to login
+            if (window.location.pathname.includes('bookmarks.html') || 
+                window.location.pathname.includes('import-export.html') ||
+                window.location.pathname.includes('sync.html')) {
+                window.location.href = '/';
+            }
         }
     },
 
@@ -53,18 +62,37 @@ const Auth = {
         const email = document.getElementById('login-email').value;
         const password = document.getElementById('login-password').value;
 
+        if (!email || !password) {
+            Utils.showNotification('Please fill in all fields', 'warning');
+            return;
+        }
+
         try {
-            // Simulate API call - replace with actual API
-            const response = await this.mockLogin(email, password);
-            
-            this.currentUser = response.user;
-            localStorage.setItem('authToken', response.access_token);
+            const submitBtn = document.querySelector('#login-form button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Signing in...';
+            submitBtn.disabled = true;
+
+            const response = await Utils.loginUser(email, password);
+
+            console.log(response.access_token);
+            sessionStorage.setItem('authToken', response.access_token);
             localStorage.setItem('userData', JSON.stringify(response.user));
+            this.currentUser = response.user;
             
-            Utils.showNotification('Login successful!', 'success');
-            App.showAppPages();
+            Utils.showNotification(`Welcome back, ${response.user.username}!`, 'success');
+            setTimeout(() => {
+                window.location.href = '/bookmarks.html';
+            }, 1500);
+
         } catch (error) {
-            Utils.showNotification('Login failed. Please check your credentials.', 'error');
+            console.error('Login failed:', error);
+            // Reset button
+            const submitBtn = document.querySelector('#login-form button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.textContent = 'Sign In';
+                submitBtn.disabled = false;
+            }
         }
     },
 
@@ -72,84 +100,63 @@ const Auth = {
         const username = document.getElementById('register-username').value;
         const email = document.getElementById('register-email').value;
         const password = document.getElementById('register-password').value;
+        const confirmPassword = document.getElementById('register-confirm-password')?.value;
+
+        if (!username || !email || !password) {
+            Utils.showNotification('Please fill in all fields', 'warning');
+            return;
+        }
+
+        if (confirmPassword && password !== confirmPassword) {
+            Utils.showNotification('Passwords do not match', 'warning');
+            return;
+        }
+
+        if (password.length < 6) {
+            Utils.showNotification('Password must be at least 6 characters long', 'warning');
+            return;
+        }
 
         try {
-            // Simulate API call - replace with actual API
-            const response = await this.mockRegister(username, email, password);
-            
-            this.currentUser = response.user;
-            localStorage.setItem('authToken', response.access_token);
+            const submitBtn = document.querySelector('#register-form button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Creating account...';
+            submitBtn.disabled = true;
+
+            const response = await Utils.registerUser(email, username, password);
+
+            sessionStorage.setItem('authToken', response.access_token);
             localStorage.setItem('userData', JSON.stringify(response.user));
+            this.currentUser = response.user;
             
-            Utils.showNotification('Registration successful!', 'success');
-            App.showAppPages();
+            Utils.showNotification(`Account created successfully! Welcome, ${response.user.username}!`, 'success');
+            setTimeout(() => {
+                window.location.href = '/bookmarks.html';
+            }, 1500);
+
         } catch (error) {
-            Utils.showNotification('Registration failed. Please try again.', 'error');
+            console.error('Registration failed:', error);
+            // Reset button
+            const submitBtn = document.querySelector('#register-form button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.textContent = 'Sign Up';
+                submitBtn.disabled = false;
+            }
         }
     },
 
     handleLogout: function() {
-        this.currentUser = null;
         localStorage.removeItem('authToken');
         localStorage.removeItem('userData');
-        App.showAuthPages();
+        this.currentUser = null;
         Utils.showNotification('Logged out successfully', 'info');
-    },
-
-    showLoginPage: function() {
-        document.getElementById('login-page').classList.add('active');
-        document.getElementById('register-page').classList.remove('active');
-    },
-
-    showRegisterPage: function() {
-        document.getElementById('register-page').classList.add('active');
-        document.getElementById('login-page').classList.remove('active');
-    },
-
-    // Mock API calls - replace with actual API implementation
-    mockLogin: function(email, password) {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                if (email && password) {
-                    resolve({
-                        user: {
-                            id: "123e4567-e89b-12d3-a456-426614174000",
-                            email: email,
-                            username: "bookmark_lover",
-                            account_type: "premium",
-                            created_at: "2023-01-15T10:30:00Z",
-                            updated_at: "2023-05-20T14:45:00Z"
-                        },
-                        access_token: "mock_jwt_token_here",
-                        refresh_token: "mock_refresh_token_here"
-                    });
-                } else {
-                    reject(new Error('Invalid credentials'));
-                }
-            }, 1000);
-        });
-    },
-
-    mockRegister: function(username, email, password) {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                if (username && email && password) {
-                    resolve({
-                        user: {
-                            id: Utils.generateId(),
-                            email: email,
-                            username: username,
-                            account_type: "free",
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        },
-                        access_token: "mock_jwt_token_here",
-                        refresh_token: "mock_refresh_token_here"
-                    });
-                } else {
-                    reject(new Error('Invalid registration data'));
-                }
-            }, 1000);
-        });
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 1000);
     }
 };
+
+// Initialize auth on all pages
+document.addEventListener('DOMContentLoaded', function() {
+    Auth.init();
+});

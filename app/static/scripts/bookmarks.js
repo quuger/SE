@@ -26,43 +26,9 @@ const Bookmarks = {
     },
 
     loadBookmarks: function() {
-        // In a real app, this would be an API call
-        this.bookmarks = [
-            {
-                id: "1",
-                url: "https://example.com",
-                title: "Example Website",
-                description: "This is an example website for demonstration purposes.",
-                status: "active",
-                access_level: "public",
-                created_at: "2023-05-15T10:30:00Z",
-                updated_at: "2023-05-15T10:30:00Z",
-                sync_version: 1
-            },
-            {
-                id: "2",
-                url: "https://github.com",
-                title: "GitHub",
-                description: "Code hosting platform for version control and collaboration.",
-                status: "active",
-                access_level: "private",
-                created_at: "2023-05-10T14:20:00Z",
-                updated_at: "2023-05-12T09:15:00Z",
-                sync_version: 2
-            },
-            {
-                id: "3",
-                url: "https://stackoverflow.com",
-                title: "Stack Overflow",
-                description: "Community for developers to learn and share knowledge.",
-                status: "archived",
-                access_level: "public",
-                created_at: "2023-04-22T16:45:00Z",
-                updated_at: "2023-05-05T11:30:00Z",
-                sync_version: 3
-            }
-        ];
-        
+        token = sessionStorage.getItem('authToken');
+        this.bookmarks = Utils.fetchBookmarks(token);
+
         this.filteredBookmarks = [...this.bookmarks];
         this.renderBookmarks();
     },
@@ -88,17 +54,14 @@ const Bookmarks = {
 
     addBookmark: function(title, url, description, accessLevel) {
         const newBookmark = {
-            id: Utils.generateId(),
             url: url,
             title: title,
             description: description,
-            status: "active",
             access_level: accessLevel,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            sync_version: 1
         };
 
+        token = sessionStorage.getItem('authToken');
+        Utils.putBookmark(token, newBookmark);
         // In a real app, this would be an API call
         this.bookmarks.unshift(newBookmark);
         this.filterBookmarks();
