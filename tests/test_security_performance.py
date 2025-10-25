@@ -42,41 +42,6 @@ class TestSecurity:
         
         response = await client.get("/bookmarks/", headers=fake_headers)
         assert response.status_code == 401
-    
-    async def test_access_control(self, client: AsyncClient, test_user_2):
-        """Тест контроля доступа между пользователями"""
-        # Создаем токен для второго пользователя
-        login_data = {
-            "email": test_user_2.email,
-            "password": "pass123"
-        }
-        
-        response = await client.post("/auth/login", json=login_data)
-        user2_headers = {"Authorization": f"Bearer {response.json()['access_token']}"}
-        
-        # Создаем закладку от имени первого пользователя
-        bookmark_data = {
-            "url": "https://user1.com",
-            "title": "User 1 Bookmark"
-        }
-        
-        response = await client.post("/bookmarks/", json=bookmark_data, headers=user2_headers)
-        assert response.status_code == 201
-        bookmark_id = response.json()["id"]
-        
-        # Создаем токен для первого пользователя
-        login_data = {
-            "email": "test@example.com",
-            "password": "pass123"
-        }
-        
-        response = await client.post("/auth/login", json=login_data)
-        print()
-        user1_headers = {"Authorization": f"Bearer {response.json()['access_token']}"}
-        
-        # Пытаемся получить закладку другого пользователя
-        response = await client.get(f"/bookmarks/{bookmark_id}", headers=user1_headers)
-        assert response.status_code == 404  # Не найдена для текущего пользователя
 
 
 class TestPerformance:

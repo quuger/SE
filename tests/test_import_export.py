@@ -359,7 +359,7 @@ CSV Bookmark 1,CSV Description 1,private"""
         print(response.text)
 
         assert response.status_code == 422
-        assert "String should match pattern" in response.json()["detail"]
+        assert "String should match pattern" in response.json()["detail"][0]["msg"]
     
     async def test_import_base64_data(self, client: AsyncClient, auth_headers):
         """Тест импорта с base64 данными"""
