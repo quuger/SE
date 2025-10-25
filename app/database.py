@@ -2,9 +2,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+import os
 
-# Database URL from docker-compose environment
-DATABASE_URL = "postgresql+asyncpg://postgres:postgres@db:5432/hw_checker"
+# Database URL from environment variable or default
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@db:5432/hw_checker")
 
 # Create async engine
 engine = create_async_engine(DATABASE_URL, echo=True)
