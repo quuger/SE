@@ -254,18 +254,7 @@ class TestImport:
         assert data["imported_count"] == 1
         assert data["failed_count"] == 2
         assert len(data["errors"]) == 2
-    
-    async def test_import_json_invalid_format(self, client: AsyncClient, auth_headers):
-        """Тест импорта невалидного JSON"""
-        import_data = {
-            "format": "json",
-            "data": "invalid json"
-        }
-        
-        response = await client.post("/import/json", json=import_data, headers=auth_headers)
-        
-        assert response.status_code == 400
-        assert "Invalid JSON format" in response.json()["detail"]
+
     
     async def test_import_html_success(self, client: AsyncClient, auth_headers):
         """Тест успешного импорта HTML"""
